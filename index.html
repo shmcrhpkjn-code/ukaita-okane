@@ -1,0 +1,494 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>💰 浮いたお金メモ</title>
+    <style>
+        :root {
+            --primary: #10B981;
+            --primary-dark: #059669;
+            --bg: #F3F4F6;
+            --card: #FFFFFF;
+            --text: #1F2937;
+            --text-light: #6B7280;
+            --danger: #EF4444;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            margin: 0;
+            padding: 16px;
+            display: flex;
+            justify-content: center;
+        }
+        .container {
+            width: 100%;
+            max-width: 480px;
+            background: var(--card);
+            padding: 20px;
+            border-radius: 16px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+        h1 {
+            font-size: 1.5rem;
+            text-align: center;
+            margin-bottom: 20px;
+            color: var(--primary-dark);
+        }
+        .card {
+            background: #F9FAFB;
+            padding: 16px;
+            border-radius: 12px;
+            margin-bottom: 16px;
+            border: 1px solid #E5E7EB;
+        }
+        input, select, button {
+            width: 100%;
+            padding: 12px;
+            margin-top: 8px;
+            margin-bottom: 12px;
+            border: 1px solid #D1D5DB;
+            border-radius: 8px;
+            font-size: 1rem;
+            box-sizing: border-box;
+            background-color: #FFFFFF;
+        }
+        button {
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        button:active {
+            background-color: var(--primary-dark);
+        }
+        .danger-btn {
+            background-color: var(--danger);
+            width: auto;
+            padding: 4px 8px;
+            font-size: 0.8rem;
+            margin: 0;
+        }
+        .totals {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 16px;
+        }
+        .total-box {
+            flex: 1;
+            background: #ECFDF5;
+            padding: 12px;
+            border-radius: 8px;
+            text-align: center;
+            border: 1px solid #A7F3D0;
+        }
+        .total-box h3 {
+            margin: 0;
+            font-size: 0.85rem;
+            color: var(--text-light);
+        }
+        .total-box p {
+            margin: 4px 0 0;
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: var(--primary-dark);
+        }
+        ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        li {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px;
+            border-bottom: 1px solid #E5E7EB;
+        }
+        li:last-child {
+            border-bottom: none;
+        }
+        .hidden {
+            display: none !important;
+        }
+        .status {
+            font-size: 0.8rem;
+            color: var(--text-light);
+            text-align: center;
+            margin-bottom: 12px;
+        }
+        label {
+            font-size: 0.85rem;
+            color: var(--text-light);
+            font-weight: bold;
+            display: block;
+            margin-top: 6px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>💰 浮いたお金メモ</h1>
+    <div id="status" class="status">接続中...</div>
+
+    <!-- 名前設定画面 -->
+    <div id="setup-section" class="card hidden">
+        <h3>あなたの名前を設定</h3>
+        <input type="text" id="username-input" placeholder="例: たろう">
+        <button id="save-name-btn">名前を保存</button>
+    </div>
+
+    <!-- メイン操作画面 -->
+    <div id="main-section" class="hidden">
+        <div class="card">
+            <p id="welcome-msg" style="margin: 0 0 8px; font-weight: bold;"></p>
+            <div id="group-info">
+                <button id="create-group-btn">新しいグループを作る</button>
+                <div style="text-align: center; margin: 8px 0; color: var(--text-light); font-size: 0.9rem;">または</div>
+                <input type="text" id="join-code-input" placeholder="グループコード (8桁)">
+                <button id="join-group-btn">グループに参加</button>
+            </div>
+            <div id="current-group-view" class="hidden">
+                <p style="margin: 0; font-size: 0.9rem; color: var(--text-light);">参加中のグループコード:</p>
+                <p id="display-group-code" style="font-size: 1.2rem; font-weight: bold; margin: 4px 0 12px; color: var(--primary-dark);"></p>
+                <button id="leave-group-btn" style="background-color: var(--text-light); padding: 6px; font-size: 0.85rem;">別のグループに参加・作成する</button>
+            </div>
+        </div>
+
+        <!-- 記録入力・一覧（グループ参加後表示） -->
+        <div id="record-section" class="hidden">
+            <div class="card">
+                <h3>浮いたお金を記録</h3>
+                
+                <label>アイコン（イラスト）</label>
+                <select id="icon-select">
+                    <option value="☕">☕ カフェ・飲み物</option>
+                    <option value="🍱">🍱 お弁当・自炊</option>
+                    <option value="🍜">🍜 外食・ランチ</option>
+                    <option value="🏪">🏪 コンビニ</option>
+                    <option value="👕">👕 洋服・ファッション</option>
+                    <option value="🚕">🚕 交通費</option>
+                    <option value="🎮">🎮 趣味・娯楽</option>
+                    <option value="💡">💡 その他・我慢</option>
+                </select>
+
+                <label>金額 (円)</label>
+                <input type="number" id="amount-input" placeholder="例: 500">
+
+                <label>何を我慢した？（詳細メモ）</label>
+                <input type="text" id="memo-input" placeholder="例: 自家製コーヒーを持参した">
+
+                <label>日付</label>
+                <input type="date" id="date-input">
+
+                <button id="add-record-btn">記録する</button>
+            </div>
+
+            <div class="totals">
+                <div class="total-box">
+                    <h3>グループ合計</h3>
+                    <p id="group-total">0円</p>
+                </div>
+                <div class="total-box">
+                    <h3>今月の合計</h3>
+                    <p id="month-total">0円</p>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3>みんなの記録</h3>
+                <ul id="record-list">
+                    <p style="text-align: center; color: var(--text-light); font-size: 0.9rem;">まだ記録はありません</p>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Firebase & アプリのロジック -->
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-app.js";
+    import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-auth.js";
+    import { getDatabase, ref, push, set, onValue, remove } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-database.js";
+
+    const firebaseConfig = {
+        apiKey: "AIzaSyAMX9s9Azem-p7rbdZL945YHZWtDNDGm0w",
+        authDomain: "uitaokane.firebaseapp.com",
+        projectId: "uitaokane",
+        storageBucket: "uitaokane.firebasestorage.app",
+        messagingSenderId: "533113681449",
+        appId: "1:533113681449:web:83ba4f2080b96bd318ce38",
+        measurementId: "G-7LVXPFJHM3"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getDatabase(app);
+
+    let currentUser = null;
+    let currentGroupId = localStorage.getItem("ukaita_group_id") || null;
+    let currentUserName = localStorage.getItem("ukaita_username") || "";
+
+    const statusEl = document.getElementById("status");
+    const setupSection = document.getElementById("setup-section");
+    const mainSection = document.getElementById("main-section");
+    const usernameInput = document.getElementById("username-input");
+    const saveNameBtn = document.getElementById("save-name-btn");
+    const welcomeMsg = document.getElementById("welcome-msg");
+    const groupInfo = document.getElementById("group-info");
+    const currentGroupView = document.getElementById("current-group-view");
+    const displayGroupCode = document.getElementById("display-group-code");
+    const createGroupBtn = document.getElementById("create-group-btn");
+    const joinCodeInput = document.getElementById("join-code-input");
+    const joinGroupBtn = document.getElementById("join-group-btn");
+    const leaveGroupBtn = document.getElementById("leave-group-btn");
+    const recordSection = document.getElementById("record-section");
+    
+    const iconSelect = document.getElementById("icon-select");
+    const amountInput = document.getElementById("amount-input");
+    const memoInput = document.getElementById("memo-input");
+    const dateInput = document.getElementById("date-input");
+    const addRecordBtn = document.getElementById("add-record-btn");
+    
+    const groupTotalEl = document.getElementById("group-total");
+    const monthTotalEl = document.getElementById("month-total");
+    const recordList = document.getElementById("record-list");
+
+    // 今日付をデフォルトセットする関数
+    function setDefaultDate() {
+        const today = new Date();
+        const yyyy = today.getFullYear();
+        const mm = String(today.getMonth() + 1).padStart(2, '0');
+        const dd = String(today.getDate()).padStart(2, '0');
+        dateInput.value = `${yyyy}-${mm}-${dd}`;
+    }
+    setDefaultDate();
+
+    // 匿名認証の実行
+    signInAnonymously(auth)
+        .then((result) => {
+            currentUser = result.user;
+            statusEl.textContent = "接続完了";
+            statusEl.classList.add("hidden");
+            initApp();
+        })
+        .catch((error) => {
+            console.error("認証エラー:", error);
+            statusEl.textContent = "接続に失敗しました";
+        });
+
+    function initApp() {
+        if (!currentUserName) {
+            setupSection.classList.remove("hidden");
+        } else {
+            showMainSection();
+        }
+    }
+
+    saveNameBtn.addEventListener("click", () => {
+        const name = usernameInput.value.trim();
+        if (!name) {
+            alert("名前を入力してください");
+            return;
+        }
+        localStorage.setItem("ukaita_username", name);
+        currentUserName = name;
+        setupSection.classList.add("hidden");
+        showMainSection();
+    });
+
+    function showMainSection() {
+        mainSection.classList.remove("hidden");
+        welcomeMsg.textContent = `こんにちは、${currentUserName}さん`;
+
+        if (currentGroupId) {
+            groupInfo.classList.add("hidden");
+            currentGroupView.classList.remove("hidden");
+            displayGroupCode.textContent = currentGroupId;
+            recordSection.classList.remove("hidden");
+            listenRecords();
+        } else {
+            groupInfo.classList.remove("hidden");
+            currentGroupView.classList.add("hidden");
+            recordSection.classList.add("hidden");
+        }
+    }
+
+    // ランダムな8桁コード生成
+    function generateGroupCode() {
+        const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+        let code = "";
+        for (let i = 0; i < 8; i++) {
+            code += chars.charAt(Math.floor(Math.random() * chars.length));
+        }
+        return code;
+    }
+
+    createGroupBtn.addEventListener("click", () => {
+        const newCode = generateGroupCode();
+        currentGroupId = newCode;
+        localStorage.setItem("ukaita_group_id", newCode);
+        showMainSection();
+    });
+
+    joinGroupBtn.addEventListener("click", () => {
+        const code = joinCodeInput.value.trim().toUpperCase();
+        if (code.length !== 8) {
+            alert("8桁のグループコードを入力してください");
+            return;
+        }
+        currentGroupId = code;
+        localStorage.setItem("ukaita_group_id", code);
+        joinCodeInput.value = "";
+        showMainSection();
+    });
+
+    leaveGroupBtn.addEventListener("click", () => {
+        if (confirm("別のグループに移動しますか？")) {
+            currentGroupId = null;
+            localStorage.removeItem("ukaita_group_id");
+            showMainSection();
+        }
+    });
+
+    // 記録の追加
+    addRecordBtn.addEventListener("click", async () => {
+        const amount = Number(amountInput.value);
+        const icon = iconSelect.value;
+        const memo = memoInput.value.trim() || "我慢";
+        const selectedDate = dateInput.value;
+
+        if (!amount || amount <= 0) {
+            alert("正しい金額を入力してください");
+            return;
+        }
+        if (!selectedDate) {
+            alert("日付を選択してください");
+            return;
+        }
+        if (!currentUser || !currentGroupId) {
+            alert("グループに参加していません");
+            return;
+        }
+
+        const recordsRef = ref(db, `groups/${currentGroupId}/records`);
+        const newRecordRef = push(recordsRef);
+
+        const recordData = {
+            uid: currentUser.uid,
+            name: currentUserName,
+            icon: icon,
+            amount: amount,
+            memo: memo,
+            date: selectedDate + "T00:00:00.000Z"
+        };
+
+        try {
+            await set(newRecordRef, recordData);
+            amountInput.value = "";
+            memoInput.value = "";
+            setDefaultDate();
+        } catch (error) {
+            console.error("保存エラー:", error);
+            alert("保存に失敗しました。");
+        }
+    });
+
+    // 記録の監視と表示
+    function listenRecords() {
+        const recordsRef = ref(db, `groups/${currentGroupId}/records`);
+        onValue(recordsRef, (snapshot) => {
+            const data = snapshot.val();
+            recordList.innerHTML = "";
+            let gTotal = 0;
+            let mTotal = 0;
+            const now = new Date();
+            const currentYearMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+
+            if (!data) {
+                recordList.innerHTML = '<p style="text-align: center; color: var(--text-light); font-size: 0.9rem;">まだ記録はありません</p>';
+                groupTotalEl.textContent = "0円";
+                monthTotalEl.textContent = "0円";
+                return;
+            }
+
+            const records = Object.entries(data).reverse(); // 新しい順
+
+            records.forEach(([id, record]) => {
+                gTotal += record.amount;
+
+                // 今月の合計計算
+                if (record.date && record.date.startsWith(currentYearMonth)) {
+                    mTotal += record.amount;
+                }
+
+                const li = document.createElement("li");
+                
+                const datePart = record.date ? record.date.split("T")[0] : "";
+                const parts = datePart.split("-");
+                let dateStr = "";
+                if (parts.length === 3) {
+                    dateStr = `${Number(parts[1])}/${Number(parts[2])}`;
+                }
+
+                const icon = record.icon || "💡";
+
+                let deleteButtonHtml = "";
+                // 自分の記録であれば削除ボタンを表示
+                if (currentUser && record.uid === currentUser.uid) {
+                    deleteButtonHtml = `<button class="danger-btn" data-id="${id}">削除</button>`;
+                }
+
+                li.innerHTML = `
+                    <div style="display: flex; align-items: center; flex: 1; margin-right: 8px;">
+                        <span style="font-size: 1.5rem; margin-right: 10px;">${icon}</span>
+                        <div style="flex: 1;">
+                            <div style="font-size: 0.8rem; color: var(--text-light);">${escapeHtml(record.name)} - ${dateStr}</div>
+                            <div style="font-weight: bold; font-size: 1.05rem;">¥${record.amount.toLocaleString()} <span style="font-weight: normal; font-size: 0.9rem; color: var(--text-light);">(${escapeHtml(record.memo)})</span></div>
+                        </div>
+                    </div>
+                    ${deleteButtonHtml}
+                `;
+
+                // 削除ボタンのイベント
+                const delBtn = li.querySelector(".danger-btn");
+                if (delBtn) {
+                    delBtn.addEventListener("click", async () => {
+                        if (confirm("この記録を削除しますか？")) {
+                            try {
+                                await remove(ref(db, `groups/${currentGroupId}/records/${id}`));
+                            } catch (e) {
+                                alert("削除に失敗しました");
+                            }
+                        }
+                    });
+                }
+
+                recordList.appendChild(li);
+            });
+
+            groupTotalEl.textContent = `${gTotal.toLocaleString()}円`;
+            monthTotalEl.textContent = `${mTotal.toLocaleString()}円`;
+        });
+    }
+
+    function escapeHtml(str) {
+        return str.replace(/[&'`<>"]/g, function (match) {
+            return {
+                '&': '&amp;',
+                '\'': '&#x27;',
+                '`': '&#x60;',
+                '<': '&lt;',
+                '>': '&gt;',
+                '"': '&quot;',
+            }[match]
+        });
+    }
+</script>
+
+</body>
+</html>
