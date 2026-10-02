@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>浮いたお金メモ</title>
+<style>
+*{box-sizing:border-box}
+body{
+  margin:0;
+  font-family:-apple-system,BlinkMacSystemFont,"Helvetica Neue","Yu Gothic",sans-serif;
+  background:#f7f5f0;
+  color:#333;
+}
+header{
+  background:#6d8b74;
+  color:white;
+  padding:28px 20px;
+  text-align:center;
+}
+header h1{margin:0 0 6px;font-size:26px}
+header p{margin:0;font-size:14px;opacity:.9}
+.container{max-width:850px;margin:auto;padding:20px}
+.summary{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:12px;
+  margin-bottom:20px;
+}
+.card,.form-card,.monthly{
+  background:white;
+  border-radius:16px;
+  padding:20px;
+  box-shadow:0 3px 12px rgba(0,0,0,.06);
+}
+.label{color:#777;font-size:13px;margin-bottom:8px}
+.amount{font-size:28px;font-weight:bold;color:#52745c}
+.form-card{margin-bottom:20px}
+.form-card h2,.monthly h2{margin-top:0;font-size:19px}
+.form-group{margin-bottom:15px}
+label{display:block;font-size:14px;font-weight:bold;margin-bottom:6px}
+input,select{
+  width:100%;
+  padding:12px;
+  border:1px solid #ddd;
+  border-radius:10px;
+  font-size:16px;
+  background:white;
+}
+input:focus,select:focus{outline:none;border-color:#6d8b74}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+button{
+  border:none;
+  border-radius:10px;
+  padding:13px 18px;
+  font-size:15px;
+  font-weight:bold;
+}
+.add-button{
+  width:100%;
+  background:#6d8b74;
+  color:white;
+}
+.section-title{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  margin:25px 0 12px;
+}
+.section-title h2{margin:0;font-size:19px}
+.clear-button{
+  background:#eee;
+  color:#666;
+  font-size:12px;
+  padding:8px 12px;
+}
+.record{
+  background:white;
+  border-radius:14px;
+  padding:16px;
+  margin-bottom:10px;
+  box-shadow:0 2px 8px rgba(0,0,0,.05);
+  display:flex;
+  justify-content:space-between;
+  gap:15px;
+}
+.record-info{flex:1;min-width:0}
+.record-title{font-weight:bold;margin-bottom:5px;word-break:break-word}
+.record-date,.record-detail{color:#888;font-size:12px}
+.record-detail{margin-top:4px}
+.record-money{text-align:right;white-space:nowrap}
+.saved{color:#52745c;font-weight:bold;font-size:19px}
+.delete-button{
+  background:#f1eeee;
+  color:#999;
+  padding:6px 9px;
+  font-size:11px;
+  margin-top:5px;
+}
+.empty{
+  text-align:center;
+  padding:40px 20px;
+  color:#999;
+  background:white;
+  border-radius:14px;
+}
+.monthly{margin-top:20px}
+.month-row{
+  display:flex;
+  justify-content:space-between;
+  padding:12px 0;
+  border-bottom:1px solid #eee;
+}
+.month-row:last-child{border-bottom:none}
+.month-money{font-weight:bold;color:#52745c}
+.message{text-align:center;color:#52745c;font-size:13px;height:20px;margin-top:8px}
+@media(max-width:600px){
+  .row{grid-template-columns:1fr}
+  .card{padding:15px}
+  .card .amount{font-size:22px}
+}
+</style>
+</head>
+
+<body>
+
+<header>
+<h1>💰 浮いたお金メモ</h1>
+<p>ちょっとした節約を、ちゃんと残そう。</p>
+</header>
+
+<div class="container">
+
+<div class="summary">
+<div class="card">
+<div class="label">累計で浮いたお金</div>
+<div class="amount" id="totalAmount">¥0</div>
+</div>
+
+<div class="card">
+<div class="label">今月浮いたお金</div>
+<div class="amount" id="monthAmount">¥0</div>
+</div>
+</div>
+
+<div class="form-card">
+<h2>＋ 浮いたお金を記録</h2>
+
+<div class="form-group">
+<label>日付</label>
+<input type="date" id="date">
+</div>
+
+<div class="form-group">
+<label>何で浮いた？</label>
+<input type="text" id="title" placeholder="例：コンビニに行かなかった">
+</div>
+
+<div class="row">
+<div class="form-group">
+<label>本来使う予定だった金額</label>
+<input type="number" id="planned" min="0" placeholder="1000">
+</div>
+
+<div class="form-group">
+<label>実際に使った金額</label>
+<input type="number" id="actual" min="0" placeholder="500">
+</div>
+</div>
+
+<div class="form-group">
+<label>カテゴリー</label>
+<select id="category">
+<option value="食費">🍚 食費</option>
+<option value="買い物">🛍️ 買い物</option>
+<option value="交通費">🚃 交通費</option>
+<option value="娯楽">🎮 娯楽</option>
+<option value="その他">💡 その他</option>
+</select>
+</div>
+
+<button class="add-button" onclick="addRecord()">💰 記録する</button>
+<div class="message" id="message"></div>
+</div>
+
+<div class="section-title">
+<h2>📋 記録</h2>
+<button class="clear-button" onclick="clearAll()">すべて削除</button>
+</div>
+
+<div id="records"></div>
+
+<div class="monthly">
+<h2>📅 月別の合計</h2>
+<div id="monthlyList"></div>
+</div>
+
+</div>
+
+<script>
+let records=JSON.parse(localStorage.getItem("savedMoneyRecords"))||[];
+
+const today=new Date();
+document.getElementById("date").value=
+`${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,"0")}-${String(today.getDate()).padStart(2,"0")}`;
+
+function yen(n){
+return "¥"+Number(n).toLocaleString("ja-JP");
+}
+
+function addRecord(){
+const date=document.getElementById("date").value;
+const title=document.getElementById("title").value.trim();
+const planned=Number(document.getElementById("planned").value);
+const actual=Number(document.getElementById("actual").value);
+const category=document.getElementById("category").value;
+
+if(!date){alert("日付を入力してください");return}
+if(!title){alert("何で浮いたか入力してください");return}
+
+const saved=planned-actual;
+
+if(saved<=0){
+alert("本来の金額を実際の金額より大きくしてください");
+return;
+}
+
+records.push({
+id:Date.now(),
+date,title,planned,actual,saved,category
+});
+
+localStorage.setItem("savedMoneyRecords",JSON.stringify(records));
+
+render();
+
+document.getElementById("title").value="";
+document.getElementById("planned").value="";
+document.getElementById("actual").value="";
+
+document.getElementById("message").textContent=
+`${yen(saved)} 浮いた！🎉`;
+
+setTimeout(()=>{
+document.getElementById("message").textContent="";
+},2500);
+}
+
+function render(){
+renderSummary();
+renderRecords();
+renderMonthly();
+}
+
+function renderSummary(){
+const total=records.reduce((s,r)=>s+r.saved,0);
+const now=new Date();
+
+const monthTotal=records.filter(r=>{
+const d=new Date(r.date);
+return d.getFullYear()===now.getFullYear() &&
+d.getMonth()===now.getMonth();
+}).reduce((s,r)=>s+r.saved,0);
+
+document.getElementById("totalAmount").textContent=yen(total);
+document.getElementById("monthAmount").textContent=yen(monthTotal);
+}
+
+function renderRecords(){
+const box=document.getElementById("records");
+
+if(records.length===0){
+box.innerHTML=
+`<div class="empty">まだ記録がありません🥺<br>浮いたお金を記録してみよう！</div>`;
+return;
+}
+
+const sorted=[...records].sort((a,b)=>new Date(b.date)-new Date(a.date));
+
+box.innerHTML=sorted.map(r=>`
+<div class="record">
+<div class="record-info">
+<div class="record-title">${escapeHTML(r.title)}</div>
+<div class="record-date">${formatDate(r.date)} ・ ${escapeHTML(r.category)}</div>
+<div class="record-detail">本来 ${yen(r.planned)} → 実際 ${yen(r.actual)}</div>
+</div>
+<div class="record-money">
+<div class="saved">+${yen(r.saved)}</div>
+<button class="delete-button" onclick="deleteRecord(${r.id})">削除</button>
+</div>
+</div>
+`).join("");
+}
+
+function renderMonthly(){
+const box=document.getElementById("monthlyList");
+
+if(records.length===0){
+box.innerHTML='<div style="color:#999">まだデータがありません。</div>';
+return;
+}
+
+const months={};
+
+records.forEach(r=>{
+const m=r.date.substring(0,7);
+months[m]=(months[m]||0)+r.saved;
+});
+
+box.innerHTML=Object.keys(months).sort().reverse().map(m=>{
+const p=m.split("-");
+return `
+<div class="month-row">
+<span>${p[0]}年${Number(p[1])}月</span>
+<span class="month-money">${yen(months[m])}</span>
+</div>`;
+}).join("");
+}
+
+function deleteRecord(id){
+if(!confirm("この記録を削除しますか？"))return;
+records=records.filter(r=>r.id!==id);
+localStorage.setItem("savedMoneyRecords",JSON.stringify(records));
+render();
+}
+
+function clearAll(){
+if(records.length===0)return;
+if(!confirm("すべての記録を削除しますか？"))return;
+records=[];
+localStorage.setItem("savedMoneyRecords",JSON.stringify(records));
+render();
+}
+
+function formatDate(s){
+const d=new Date(s);
+return `${d.getFullYear()}/${d.getMonth()+1}/${d.getDate()}`;
+}
+
+function escapeHTML(text){
+const div=document.createElement("div");
+div.textContent=text;
+return div.innerHTML;
+}
+
+render();
+</script>
+
+</body>
+</html>
